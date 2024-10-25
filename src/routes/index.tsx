@@ -200,6 +200,20 @@ export default component$(() => {
                 <p class="mt-2 text-sm text-red-500">{state.error}</p>
               )}
             </div>
+            {/* Credits */}
+            <div class="mt-4 text-center text-xs text-gray-500">
+              <p>
+                Made by{" "}
+                <a
+                  href="https://github.com/furSUDO/simple-atproto-handles"
+                  target="_blank"
+                  class="animate underline underline-offset-2 duration-200 hover:text-fuchsia-600"
+                >
+                  SUDO
+                </a>{" "}
+                with 💖
+              </p>
+            </div>
           </div>
         ) : (
           /* Step 4: Success message */
