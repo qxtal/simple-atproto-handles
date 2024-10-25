@@ -40,9 +40,18 @@ export const useCheckUsername = routeAction$(async (data, { platform }) => {
     });
 
     const profile = await agent.getProfile({ actor: username });
+    if (profile.headers["ratelimit-remaining"] === "0") {
+      return { error: "Rate limit exceeded" };
+    }
     return profile.data;
   } catch (error) {
-    return { error: "Failed to check username" };
+    if (error instanceof Error) {
+      return {
+        error: `Failed to check username: ${error.message} - Please try again later.`,
+      };
+    } else {
+      return { error: "An unknown error occurred while checking username" };
+    }
   }
 });
 
@@ -75,8 +84,10 @@ export default component$(() => {
     userDid: "",
     usernameExists: null as null | boolean, // null = not checked, true = exists, false = doesn't exist
     loading: false,
-    error: null as null | string,
+    errorCheckUsername: null as null | string,
+    errorNewUsername: null as null | string,
     success: false, // Track when the form is successfully submitted
+    rateLimitExceeded: false,
   });
 
   const pageData = useGetPageData();
@@ -127,28 +138,47 @@ export default component$(() => {
               />
               <button
                 class={`mt-4 w-full min-w-32 rounded-lg px-5 py-3 text-lg font-semibold shadow-md transition focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed 
-                  ${state.step === 1 && state.currentUsername.length >= 1 ? "bg-blue-600 text-white hover:bg-blue-700" : "pointer-events-none bg-gray-300 text-gray-400"}`}
+                ${state.step === 1 && state.currentUsername.length >= 1 && !state.rateLimitExceeded ? "bg-blue-600 text-white hover:bg-blue-700" : "pointer-events-none bg-gray-300 text-gray-400"}`}
                 onClick$={async () => {
                   state.loading = true;
+                  state.errorCheckUsername = null;
                   const response = await checkProfileAction.submit({
                     username: state.currentUsername.toLowerCase(),
                   });
                   state.loading = false;
-                  if (response.value.did) {
-                    state.usernameExists = true;
-                    state.step = 2;
-                    state.userDid = response.value.did;
-                  } else {
+                  if (response.value.error) {
                     state.usernameExists = false;
-                    state.error = "Username not found, please try again.";
+                    state.errorCheckUsername = response.value.error.toString();
+                    if (
+                      response.value.error.toString().includes("Rate Limit")
+                    ) {
+                      state.rateLimitExceeded = true; // Disable further checks
+                    }
+                  } else {
+                    if (response.value.did) {
+                      state.usernameExists = true;
+                      state.step = 2;
+                      state.userDid = response.value.did;
+                    } else {
+                      state.usernameExists = false;
+                      state.errorCheckUsername = response.value.error
+                        ? response.value.error.toString()
+                        : "Unknown error";
+                    }
                   }
                 }}
-                disabled={!state.currentUsername || state.loading}
+                disabled={
+                  !state.currentUsername ||
+                  state.loading ||
+                  state.rateLimitExceeded
+                } // Disable if rate limit exceeded
               >
                 {state.loading ? "Checking..." : "Next"}
               </button>
-              {state.usernameExists === false && (
-                <p class="mt-2 text-sm text-red-500">{state.error}</p>
+              {state.errorCheckUsername && (
+                <p class="mt-2 text-sm text-red-500">
+                  {state.errorCheckUsername}
+                </p>
               )}
             </div>
             {/* Step 2: Enter new username */}
@@ -179,7 +209,7 @@ export default component$(() => {
                 class="w-full rounded-lg bg-green-600 px-5 py-3 text-lg font-semibold text-white shadow-md transition hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:cursor-not-allowed disabled:bg-gray-300"
                 onClick$={async () => {
                   state.loading = true;
-                  state.error = null;
+                  state.errorNewUsername = null;
                   const response = await createUserAction.submit({
                     handle: state.newUsername,
                     did: state.userDid,
@@ -189,15 +219,18 @@ export default component$(() => {
                   if (response.value.success) {
                     state.success = true; // Success state
                   } else {
-                    state.error = response.value.error;
+                    state.success = false;
+                    state.errorNewUsername = response.value.error;
                   }
                 }}
                 disabled={!state.newUsername || state.loading}
               >
                 Submit
               </button>
-              {state.error && (
-                <p class="mt-2 text-sm text-red-500">{state.error}</p>
+              {state.errorNewUsername && (
+                <p class="mt-2 text-sm text-red-500">
+                  {state.errorNewUsername}
+                </p>
               )}
             </div>
             {/* Credits */}
@@ -246,11 +279,11 @@ export default component$(() => {
 });
 
 export const head: DocumentHead = {
-  title: "Welcome to Qwik",
+  title: `Simple Bluesky Handles`,
   meta: [
     {
       name: "description",
-      content: "Qwik site description",
+      content: "Claim your own custom handle of this domain",
     },
   ],
 };
