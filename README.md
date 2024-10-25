@@ -106,7 +106,9 @@ Avoid committing `.dev.vars` to keep sensitive information secure.
 
    ![Setup Cloudflare Pages with Git](./.github/setup_pages.png)
 
-2. Authenticate, then select your repository to build and deploy.
+2. Authenticate, then select your repository to build and deploy. Be Sure to Select the **`Qwik` Framework Preset**.
+
+   ![Deploy to Cloudflare](./.github/pages_build_settings.png)
 
 ### 6. Configure Cloudflare Pages
 
