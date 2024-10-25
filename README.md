@@ -1,9 +1,9 @@
 <div align="center">
-  <img src="./.github/header.png" alt="Simple ATPProto Handles" />
+  <img src="./.github/header.png" alt="Simple ATProto Handles" />
 &#xa0;
 </div>
 
-<h1 align="center">Simple ATPProto Handles</h1>
+<h1 align="center">Simple ATProto Handles</h1>
 
 <p align="center">
   <img alt="GitHub stars" src="https://img.shields.io/github/stars/furSUDO/simple-atptoto-handles?color=56BEB8" />
@@ -11,7 +11,7 @@
 
 ## 🎯 About
 
-**Simple ATPProto Handles** allows you to use your domain as a handle on Bluesky, such as `@name.example.com`, leveraging Cloudflare’s free tier. This is especially useful for communities and individuals who want a personalized, branded Bluesky handle.
+**Simple ATProto Handles** allows you to use your domain as a handle on Bluesky, such as `@name.example.com`, leveraging Cloudflare’s free tier. This is especially useful for communities and individuals who want a personalized, branded Bluesky handle.
 
 ## ✨ Features
 
