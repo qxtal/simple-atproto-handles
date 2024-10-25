@@ -54,7 +54,6 @@
   },
   "dependencies": {
     "@atproto/api": "^0.13.12",
-    "@atproto/identity": "^0.4.2",
     "d1-orm": "^0.9.2",
     "ulidx": "^2.4.1"
   }

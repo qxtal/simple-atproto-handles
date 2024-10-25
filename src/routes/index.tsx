@@ -9,8 +9,8 @@ import { TbArrowNarrowRight } from "@qwikest/icons/tablericons";
 
 import { D1Orm } from "d1-orm";
 import { UserModel } from "~/modles";
+import { HandleResolver } from "../lib/handle-resolver";
 
-import { AtpAgent } from "@atproto/api";
 import { monotonicFactory } from "ulidx";
 const ulid = monotonicFactory();
 
@@ -25,33 +25,22 @@ export const useGetPageData = routeLoader$(async ({ url, platform }) => {
   };
 });
 
-export const useCheckUsername = routeAction$(async (data, { platform }) => {
+export const useCheckUsername = routeAction$(async (data) => {
   const username = data.username.toString().toLowerCase();
+  const hdlres = new HandleResolver({});
   const regex2 =
     /^([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$/;
   if (!regex2.test(username)) {
     return { error: "Invalid username" };
   }
   try {
-    const agent = new AtpAgent({ service: "https://bsky.social" });
-    await agent.login({
-      identifier: platform.env.BSKY_USERNAME,
-      password: platform.env.BSKY_PASSWORD,
-    });
+    const did = await hdlres.resolve(username);
+    console.log(did);
 
-    const profile = await agent.getProfile({ actor: username });
-    if (profile.headers["ratelimit-remaining"] === "0") {
-      return { error: "Rate limit exceeded" };
-    }
-    return profile.data;
+    return { did: did };
   } catch (error) {
-    if (error instanceof Error) {
-      return {
-        error: `Failed to check username: ${error.message} - Please try again later.`,
-      };
-    } else {
-      return { error: "An unknown error occurred while checking username" };
-    }
+    console.error(error);
+    return { error: "Failed to resolve username" };
   }
 });
 
@@ -138,40 +127,28 @@ export default component$(() => {
               />
               <button
                 class={`mt-4 w-full min-w-32 rounded-lg px-5 py-3 text-lg font-semibold shadow-md transition focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed 
-                ${state.step === 1 && state.currentUsername.length >= 1 && !state.rateLimitExceeded ? "bg-blue-600 text-white hover:bg-blue-700" : "pointer-events-none bg-gray-300 text-gray-400"}`}
+                ${state.step === 1 && state.currentUsername.length >= 1 ? "bg-blue-600 text-white hover:bg-blue-700" : "pointer-events-none bg-gray-300 text-gray-400"}`}
                 onClick$={async () => {
                   state.loading = true;
-                  state.errorCheckUsername = null;
+                  state.errorCheckUsername = null; // Reset error
                   const response = await checkProfileAction.submit({
                     username: state.currentUsername.toLowerCase(),
                   });
                   state.loading = false;
                   if (response.value.error) {
                     state.usernameExists = false;
-                    state.errorCheckUsername = response.value.error.toString();
-                    if (
-                      response.value.error.toString().includes("Rate Limit")
-                    ) {
-                      state.rateLimitExceeded = true; // Disable further checks
-                    }
+                    state.errorCheckUsername = state.errorCheckUsername =
+                      response.value.error || "An unknown error occurred"; // Ensure error message
+                  } else if (response.value.did) {
+                    state.usernameExists = true;
+                    state.step = 2;
+                    state.userDid = response.value.did;
                   } else {
-                    if (response.value.did) {
-                      state.usernameExists = true;
-                      state.step = 2;
-                      state.userDid = response.value.did;
-                    } else {
-                      state.usernameExists = false;
-                      state.errorCheckUsername = response.value.error
-                        ? response.value.error.toString()
-                        : "Unknown error";
-                    }
+                    state.usernameExists = false;
+                    state.errorCheckUsername = "Failed to resolve username"; // Fallback error message
                   }
                 }}
-                disabled={
-                  !state.currentUsername ||
-                  state.loading ||
-                  state.rateLimitExceeded
-                } // Disable if rate limit exceeded
+                disabled={!state.currentUsername || state.loading}
               >
                 {state.loading ? "Checking..." : "Next"}
               </button>
@@ -194,7 +171,12 @@ export default component$(() => {
                   class="w-full rounded-lg border border-gray-300 px-4 py-3 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-400"
                   value={state.newUsername}
                   onInput$={(e) => {
-                    state.newUsername = (e.target as HTMLInputElement).value;
+                    const inputValue = (e.target as HTMLInputElement).value;
+                    const sanitizedInput = inputValue.replace(
+                      `.${pageData.value.url.host}`,
+                      "",
+                    );
+                    state.newUsername = sanitizedInput;
                   }}
                   disabled={state.step !== 2 || state.loading}
                 />
