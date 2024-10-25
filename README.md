@@ -136,7 +136,7 @@ Your handle setup is now complete!
 
 ## 📝 License
 
-This project is licensed under the MIT License. For more details, see the [LICENSE](LICENSE.md) file.
+This project is licensed under GNU General Public License v3.0. For more details, see the [LICENSE](LICENSE.md) file.
 
 Built with ❤️ & sleep deprivation by [furSUDO](https://github.com/furSUDO)
 
