@@ -1,0 +1,1 @@
+// this route exists to support the /.well-known/atproto-did endpoint
