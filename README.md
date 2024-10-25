@@ -1,8 +1,6 @@
 <div align="center">
   <img src="./.github/header.png" alt="Simple ATPProto Handles" />
-
 &#xa0;
-
 </div>
 
 <h1 align="center">Simple ATPProto Handles</h1>
