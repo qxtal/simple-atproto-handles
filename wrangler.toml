@@ -8,5 +8,5 @@ compatibility_flags = ["nodejs_compat"]
 # Docs: https://developers.cloudflare.com/pages/functions/bindings/#d1-databases
 [[d1_databases]]
 binding = "DB"
-database_name = "db-name-here"
-database_id = "db-id-here"
+database_name = "atproto-handle-db1"
+database_id = "3af7b2ae-9656-4b9a-a1eb-3f1307a4ab04"
