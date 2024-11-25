@@ -228,6 +228,16 @@ export default component$(() => {
                 </a>{" "}
                 with 💖
               </p>
+              <p>
+                protogen.club hosted and maintained by{" "}
+                <a
+                  href="https://bsky.app/profile/quartz.xtal.net"
+                  target="_blank"
+                  class="animate underline underline-offset-2 duration-200 hover:text-fuchsia-600"
+                >
+                  Quartz Xtal
+                </a>
+              </p>
             </div>
           </div>
         ) : (
