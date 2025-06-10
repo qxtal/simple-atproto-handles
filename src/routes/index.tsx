@@ -1,6 +1,5 @@
 import { component$, useStore } from "@builder.io/qwik";
 import {
-  Link,
   routeAction$,
   routeLoader$,
   type DocumentHead,
