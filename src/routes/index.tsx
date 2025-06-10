@@ -1,6 +1,5 @@
 import { component$, useStore } from "@builder.io/qwik";
 import {
-  Link,
   routeAction$,
   routeLoader$,
   type DocumentHead,
@@ -96,13 +95,14 @@ export default component$(() => {
               </h1>
               <p class="text-center text-lg text-gray-500">
                 Join{" "}
-                <Link
+                {/*<Link
                   href="/community"
                   class="text-fuchsia-400 underline underline-offset-4 transition duration-300 ease-in-out hover:text-fuchsia-600"
-                >
+                >*/}
                   <strong>{pageData.value.users}</strong>
-                </Link>{" "}
-                users already using {hostDomain} as their handle on Bluesky!
+                {/*</Link>*/}{" "}
+                users already using {hostDomain} as their handle on
+                Bluesky!
               </p>
             </div>
             {/* Step 1: Enter current username */}
