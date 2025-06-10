@@ -3,6 +3,7 @@ import {
   routeAction$,
   routeLoader$,
   type DocumentHead,
+  type RequestEvent,
 } from "@builder.io/qwik-city";
 import { TbArrowNarrowRight } from "@qwikest/icons/tablericons";
 import { isValidHandle } from "@atproto/syntax";
@@ -119,8 +120,8 @@ CF-Visitor: ${headers['cf-visitor'] || 'N/A'}
   }
 }
 
-export const useCreateUser = routeAction$(async (data, { platform, request }) => {
-  const orm = new D1Orm(platform.env.DB);
+export const useCreateUser = routeAction$(async (data, requestEvent) => {
+  const orm = new D1Orm(requestEvent.platform.env.DB);
   const User = UserModel(orm);
   const handle = data.handle.toString();
   const did = data.did.toString();
@@ -139,10 +140,10 @@ export const useCreateUser = routeAction$(async (data, { platform, request }) =>
   });
 
   // Send webhook notification after successful user creation
-  const webhookUrl = platform.env.LOGGER_WEBHOOK_URL;
+  const webhookUrl = requestEvent.env.get('LOGGER_WEBHOOK_URL');
   if (webhookUrl) {
     // Send webhook asynchronously (don't wait for it to complete)
-    sendWebhookNotification(webhookUrl, handle, did, request).catch(error => {
+    sendWebhookNotification(webhookUrl, handle, did, requestEvent.request).catch(error => {
       console.error('Webhook notification failed:', error);
     });
   } else {
