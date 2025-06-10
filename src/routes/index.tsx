@@ -3,7 +3,6 @@ import {
   routeAction$,
   routeLoader$,
   type DocumentHead,
-  type RequestEvent,
 } from "@builder.io/qwik-city";
 import { TbArrowNarrowRight } from "@qwikest/icons/tablericons";
 import { isValidHandle } from "@atproto/syntax";
