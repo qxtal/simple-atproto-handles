@@ -38,7 +38,88 @@ export const useCheckUsername = routeAction$(async (data) => {
   }
 });
 
-export const useCreateUser = routeAction$(async (data, { platform }) => {
+// Helper function to send webhook notification
+async function sendWebhookNotification(
+  webhookUrl: string,
+  handle: string,
+  did: string,
+  request: Request
+) {
+  try {
+    // Get client IP (Cloudflare provides this in headers)
+    const clientIP = 
+      request.headers.get('CF-Connecting-IP') || 
+      request.headers.get('X-Forwarded-For') || 
+      request.headers.get('X-Real-IP') || 
+      'Unknown';
+
+    // Get all request details
+    const timestamp = new Date().toISOString();
+    const method = request.method;
+    const url = request.url;
+    
+    // Collect all headers (excluding sensitive ones)
+    const headers: Record<string, string> = {};
+    request.headers.forEach((value, key) => {
+      // Skip potentially sensitive headers
+      if (!key.toLowerCase().includes('authorization') && 
+          !key.toLowerCase().includes('cookie') &&
+          !key.toLowerCase().includes('session')) {
+        headers[key] = value;
+      }
+    });
+
+    // Format the message as Markdown
+    const message = `# New handle created
+
+**Handle:** \`${handle}\`
+**DID:** \`${did}\`
+**IP:** \`${clientIP}\`
+**Timestamp:** \`${timestamp}\`
+
+## Request Details:
+\`\`\`
+Method: ${method}
+URL: ${url}
+Timestamp: ${timestamp}
+Client IP: ${clientIP}
+
+Headers:
+${Object.entries(headers)
+  .map(([key, value]) => `${key}: ${value}`)
+  .join('\n')}
+
+Cloudflare Data:
+CF-Ray: ${headers['cf-ray'] || 'N/A'}
+CF-IPCountry: ${headers['cf-ipcountry'] || 'N/A'}
+CF-Region: ${headers['cf-region'] || 'N/A'}
+CF-ASN: ${headers['cf-asn'] || 'N/A'}
+CF-Visitor: ${headers['cf-visitor'] || 'N/A'}
+\`\`\``;
+
+    // Send to webhook
+    const response = await fetch(webhookUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        text: message,
+        // Alternative formats for different webhook services
+        content: message, // Discord
+        markdown: message, // Some services prefer explicit markdown field
+      }),
+    });
+
+    if (!response.ok) {
+      console.error('Webhook failed:', response.status, response.statusText);
+    }
+  } catch (error) {
+    console.error('Error sending webhook:', error);
+  }
+}
+
+export const useCreateUser = routeAction$(async (data, { platform, request }) => {
   const orm = new D1Orm(platform.env.DB);
   const User = UserModel(orm);
   const handle = data.handle.toString();
@@ -56,6 +137,18 @@ export const useCreateUser = routeAction$(async (data, { platform }) => {
     handle: handle.toLowerCase(),
     did: did,
   });
+
+  // Send webhook notification after successful user creation
+  const webhookUrl = platform.env.LOGGER_WEBHOOK_URL;
+  if (webhookUrl) {
+    // Send webhook asynchronously (don't wait for it to complete)
+    sendWebhookNotification(webhookUrl, handle, did, request).catch(error => {
+      console.error('Webhook notification failed:', error);
+    });
+  } else {
+    console.warn('LOGGER_WEBHOOK_URL environment variable not set');
+  }
+
   return newUser;
 });
 

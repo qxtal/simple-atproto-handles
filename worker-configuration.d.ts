@@ -4,4 +4,5 @@ interface Env {
 	BSKY_USERNAME: string;
 	BSKY_PASSWORD: string;
 	DB: D1Database;
+	LOGGER_WEBHOOK_URL?: string;
 }
